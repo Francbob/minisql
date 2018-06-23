@@ -82,7 +82,8 @@ private:
 	ValueType type;
 	int unique ;     //0:unique  1:not unique
 public:
-	Attribute(std::string n, ValueType t, int u)
+	Attribute(std::string n, ValueType t, int u);
+	Attribute() = default;
 	~Attribute() {};
 	std::string get_name(){return name;}
 	ValueType get_type(){return type;}
