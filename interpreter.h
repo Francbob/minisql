@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include "API.h"
 #include <vector>
 #include <list>
 #include <queue>
@@ -14,56 +15,43 @@
 #define TYPE_INT 0
 #endif // !INT
 
-
-
 class CommandFormatException : std::exception {};
 class OpenFileException : std::exception {};
 class OutOfBoundsException : std::exception {};
 
-// 0: int, n=1-255: char(n), 256:float
-typedef int ValueType;
 
-/// Uses a union to represent three data types.
-struct ValueStruct
-{
-	std::string CHAR_N;
-	int INT;
-	double FLOAT;
-	ValueType TYPE;
-};
-
-struct Condition
-{
-	std::string columnName;
-	enum operationType
-	{
-		greater = 0,
-		greater_or_equ,
-		less,
-		less_or_equ,
-		equal,
-		not_equ,
-		unknown
-	} opType;
-	/// uses template. Not sure whether it works.
-	ValueStruct value;
-	operationType getOpType(std::string input);
-};
+//struct Condition
+//{
+//	std::string Attribute_name;
+//	enum operationType
+//	{
+//		greater = 0,
+//		greater_or_equ,
+//		less,
+//		less_or_equ,
+//		equal,
+//		not_equ,
+//		unknown
+//	} type_compare;
+//	/// uses template. Not sure whether it works.
+//	ValueStruct value;
+//	operationType getOpType(std::string input);
+//};
 
 struct SelectStmt
 {
 	/// whether the statement has a "where ..." clause
 	bool hasWhereClause;
 	/// Not used. Designed for further extensibility
-	std::list<std::string> targetList;
+	std::vector<std::string> targetList;
 	/// Only one element will be inside. Designed as a 'list' for further extensibility
-	std::list<std::string> fromClause;
+	std::vector<std::string> fromClause;
 	/// Only "and" supported, but easy to extend
-	std::list<Condition> whereClause;
+	std::vector<condition> whereClause;
 	/// Not used. Designed for further extensibility
-	std::list<std::string> groupbyClause;
+	std::vector<std::string> groupbyClause;
 	/// Not used. Designed for further extensibility
-	std::list<Condition> havingClause;
+	std::vector<condition> havingClause;
 };
 
 struct CreateTableStmt
@@ -75,9 +63,10 @@ struct CreateTableStmt
 	/// uniqueness
 	std::map<std::string, bool> unique;
 	/// Only one element will be inside. Designed as a 'list' for further extensibility
-	std::list<std::string> primaryKeys;
+	std::vector<std::string> primaryKeys;
 	/// Not used. Designed for further extensibility
-	std::list<std::string> foreignKeys;
+	std::vector<std::string> foreignKeys;
+	// std::vector<Attribute> ToApiAttribute(std::map<std::string, ValueType> columns)
 };
 
 struct DropTableStmt
@@ -116,42 +105,44 @@ struct DeleteFromStmt
 	/// table name
 	std::string tableName;
 	/// Only "and" supported, but easy to extend
-	std::list<Condition> whereClause;
-};
-
-struct Command
-{
-	std::string text;
-	std::vector<std::string> words;
-	enum Type
-	{
-		CREATE_TABLE = 0,
-		DROP_TABLE,
-		CREATE_INDEX,
-		DROP_INDEX,
-		SELECT,
-		INSERT,
-		DELETE,
-		QUIT,
-		EXECFILE
-	}commandType;
-
-	Command(std::string _text)
-	{
-		text = _text;
-		words = Split(_text);
-	}
-
-	Command() {	}
-
-	std::vector<std::string> Split(std::string instruction);
+	std::vector<condition> whereClause;
 };
 
 class Interpreter
 {
+	/// 用于交互的API
+	static API api;
+
+	struct Command
+	{
+		std::string text;
+		std::vector<std::string> words;
+		enum Type
+		{
+			CREATE_TABLE = 0,
+			DROP_TABLE,
+			CREATE_INDEX,
+			DROP_INDEX,
+			SELECT,
+			INSERT,
+			DELETE,
+			QUIT,
+			EXECFILE
+		}commandType;
+
+		Command(std::string _text)
+		{
+			text = _text;
+			Interpreter splitter;
+			words = splitter.Split(_text);
+		}
+
+		Command() {	}
+	};
 public:
 	Interpreter();			// 默认构造函数
 	void Interact();
+
 private:
 	void GetCommand();		// 在main中获取语句
 	void ParseCommand();	// 分析语句
@@ -160,13 +151,14 @@ private:
 	void PrintErrorMsg(std::string message);	// 打印错误信息
 
 	// 工具函数
+	std::vector<std::string> Split(std::string instruction);
 	ValueType getType(std::string typestr, std::string count_str);
 	ValueStruct getValue(std::string input);
 	bool quit;				// 是否退出
 	bool errorAbort;		// 是否遇到错误
-	char delimiter;	// 分隔符，默认为';'
+	char delimiter;			// 分隔符，默认为';'
 	std::queue<Command> commands;	// 储存command
-	Command current_command;
+	Command current_command; 
 
 	enum VarType
 	{

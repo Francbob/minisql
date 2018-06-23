@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "miniSQL_code\API.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -62,7 +63,7 @@ void Interpreter::ParseCommand()
 		// 判断文件是否存在
 		if (!file_in)
 			PrintErrorMsg("Fail to open target file.");
-		while (file_in.eof())
+		while (!file_in.eof())
 		{
 			string buffer;
 			getline(file_in, buffer, delimiter);
@@ -96,7 +97,13 @@ void Interpreter::ParseCommand()
 					// 判断 primary key
 					if (column_name == "primary" && column_type == "key")
 					{
-						ct.primaryKeys.push_back(words[i + 1]);
+						// 查重
+						if (find(ct.primaryKeys.begin(), ct.primaryKeys.end(), words[i + 1]) != ct.primaryKeys.end())
+						{
+							PrintErrorMsg("Detected duplicate primary key " + words[i + 1]);
+						}
+						else
+							ct.primaryKeys.push_back(words[i + 1]);
 						i += 4;
 					}
 					// 如果是正常的column
@@ -115,6 +122,12 @@ void Interpreter::ParseCommand()
 						i += 1;
 					}
 				}
+				vector<Attribute> attributes;
+				for (auto i : ct.columns)
+				{
+					attributes.push_back(Attribute(i.first, i.second, ct.unique.find(i.first) != ct.unique.end()));
+				}
+				api.API_CreateTable(ct.tableName, attributes, ct.primaryKeys);
 			}
 		}
 		else if (words[1] == "index")
@@ -131,6 +144,7 @@ void Interpreter::ParseCommand()
 			ci.columnName = words[6];
 			if (words.size() > 8)
 				PrintErrorMsg("Can't parse " + words[8]);
+			api.API_CreateIndex(ci.tableName, ci.indexName, ci.columnName);
 		}
 	}
 	else if (words[0] == "drop")
@@ -141,6 +155,7 @@ void Interpreter::ParseCommand()
 				PrintErrorMsg("Can't parse " + words[3]);
 			DropTableStmt dt;
 			dt.tableName = words[2];
+			api.API_DropTable(dt.tableName);
 		}
 		else if (words[1] == "index")
 		{
@@ -148,6 +163,7 @@ void Interpreter::ParseCommand()
 				PrintErrorMsg("Can't parse " + words[3]);
 			DropIndexStmt di;
 			di.indexName = words[2];
+			api.API_DropIndex(di.indexName);
 		}
 	}
 	else if (words[0] == "insert")
@@ -167,6 +183,8 @@ void Interpreter::ParseCommand()
 				is.data.push_back(value);
 				i += 2;
 			}
+			/// TODO: 改api
+			api.API_Insert(is.tableName, is.data);
 		}
 		else
 			PrintErrorMsg("Can't parse " + words[1]);
@@ -186,10 +204,10 @@ void Interpreter::ParseCommand()
 				df.hasWhereClause = true;
 				for (int i = 4; i < words.size(); )
 				{
-					Condition cond;
-					cond.columnName = words[i++];
-					cond.opType = cond.getOpType(words[i++]);
-					if (cond.opType == cond.unknown)
+					condition cond;
+					cond.Attribute_name = words[i++];
+					cond.type_compare = cond.getOpType(words[i++]);
+					if (cond.type_compare == cond.unknown)
 						PrintErrorMsg("Expected an operator, now " + words[i]);
 					cond.value = getValue(words[i++]);
 					if (i < words.size())
@@ -202,10 +220,12 @@ void Interpreter::ParseCommand()
 					df.whereClause.push_back(cond);
 				}
 			}
+			api.API_Delete(df.tableName, df.whereClause);
 		}
 		else 
 		{
 			df.hasWhereClause = false;
+			api.API_Delete(df.tableName);
 		}
 	}
 	else if (words[0] == "select")
@@ -225,10 +245,10 @@ void Interpreter::ParseCommand()
 				sl.hasWhereClause = true;
 				for (int i = 5; i < words.size(); )
 				{
-					Condition cond;
-					cond.columnName = words[i++];
-					cond.opType = cond.getOpType(words[i++]);
-					if (cond.opType == cond.unknown)
+					condition cond;
+					cond.Attribute_name = words[i++];
+					cond.type_compare = cond.getOpType(words[i++]);
+					if (cond.type_compare == cond.unknown)
 						PrintErrorMsg("Expected an operator, now " + words[i]);
 					cond.value = getValue(words[i++]);
 					if (i < words.size())
@@ -241,10 +261,13 @@ void Interpreter::ParseCommand()
 					sl.whereClause.push_back(cond);
 				}
 			}
+			api.
+			api.API_Select(sl.targetList[0], sl.whereClause);
 		}
 		else
 		{
 			sl.hasWhereClause = false;
+			api.API_Select(sl.targetList[0]);
 		}
 	}
 }
@@ -271,28 +294,7 @@ void Interpreter::PrintErrorMsg(string message)
 	cout << "[Error] Command: " << current_command.text << "\n\tReason: " << message << endl;
 }
 
-// 工具函数
-Condition::operationType Condition::getOpType(std::string input)
-{
-	operationType retType;
-	if (input == "=" || input == "==")
-		retType = equal;
-	else if (input == "<>")
-		retType = not_equ;
-	else if (input == "<")
-		retType = less;
-	else if (input == ">")
-		retType = greater;
-	else if (input == "<=")
-		retType = less_or_equ;
-	else if (input == ">=")
-		retType = greater_or_equ;
-	else
-		retType = unknown;
-	return retType;
-}
-
-vector<string> Command::Split(string instruction)
+vector<string> Interpreter::Split(string instruction)
 {
 	// 返回的词列表
 	set<char> stopwords = { ' ', '\t', '\n', ';' };

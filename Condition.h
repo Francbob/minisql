@@ -17,9 +17,11 @@ public:
 		greater_or_equ,
 		unknown
 	} type_compare;
+	condition(operationType t, std::string A, ValueStruct v);
+	condition() = default;
+
 	std::string Attribute_name; //Attribute name
 	ValueStruct value;
-	condition(operationType t, std::string A, ValueStruct v);
 	operationType getOpType(std::string input);
 	//There are compare functions of delete/insert conditions
 	//"value" is the comparative value gived by users
