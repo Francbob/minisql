@@ -1,0 +1,3 @@
+C:/Users/bob/Desktop/learing-as-sophomore/oop/minisql/cmake-build-debug/CMakeFiles/minisql.dir
+C:/Users/bob/Desktop/learing-as-sophomore/oop/minisql/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/bob/Desktop/learing-as-sophomore/oop/minisql/cmake-build-debug/CMakeFiles/rebuild_cache.dir
