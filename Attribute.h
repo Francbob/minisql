@@ -88,6 +88,7 @@ public:
 	std::string get_name(){return name;}
 	ValueType get_type(){return type;}
 	int get_ifunique(){return unique;}
+	int get_length();
 };
 
 #endif

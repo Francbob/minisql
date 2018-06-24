@@ -24,7 +24,6 @@ public:
              vector<Attribute> vector_Attribute);
     string find_attr(int block_index, int record_index, int attr_index);
     int insert(const string& record);
-
 };
 
 
