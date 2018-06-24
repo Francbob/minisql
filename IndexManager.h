@@ -5,14 +5,11 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <memory>
-#include "DBfile.h"
 #include "Attribute.h"
-#include "BplusTree.h"
-//#include "Condition.h"
+#include "Condition.h"
+
 
 using namespace std;
-class IndexCluster;
 
 class IndexManager{
 public:
@@ -20,44 +17,41 @@ public:
 	~IndexManager(){};
 	
 	//Return 1 if create an index successfully, while return 0 if fails to create one
-	int CreateIndex(string Table_name, vector<Attribute> vector_Attribute);
+	//int CreateIndex(string Table_name, string vector_Attribute);
 	
-	//Return 1 if drop all the indexs successfully, while return 0 if fails.
-	int DropIndex(string Table_name, vector<vector<string> > Index_name);
+	//build an index on primary key on this table
+	//Return 1 if create succeed, while return  0 if fails
+	int CreatePrimaryIndex(string Table_name, vector<Attribute> PrimaryKey);
 
-	//? big problem
+	//Return 1 if drop index successfully, while return 0 if fails.
+	int DropIndex(string Table_name, string Index_name);
+
+	//Drop all indexs given in "Index_name"
+	//return 0 if fails
+	int DropIndex(string Table_name, vector<string> Index_name);
+	
 	//Add some values into indexs;
 	//map<string, string> includes attributes and their values;
-	//choose necessary attr to add
 	//Return 1 if add successfully, while return 0 if fails.
-	int AddIndex(string Table_name, vector<map<string, string> > insert_vector);
-	bool AddIndex(const string& Table_name, map<string,string> key_value, map<int, int> index_offset);
+	int AddIndex(string Table_name, map<string, string> insert_vector);
+	
 	//Delete all indexs in this table;
 	//Return 1 if delete successfully, while return 0 if fails.
-	int DeleteWhole(string Table_name);
+    int Delete(string Table_name, vector<string> DeleteInex_attr);
 	
 	//Delete some values in indexs in this table;
-	//map<string, string> saves the attributes and values which are deleted in the table;
-	//vector<map<string, string>> saves all masp;
+	//map<int, int> saves the index of block and offset of record;
 	//Return 1 if delete successfully, while return 0 if fails.
-	int Delete(string Table_name, vector<map<string, string> > ForDeleteIndex);
-	bool Delete(const string& Table_name, map<string,string> key_value);
+	int Delete(string Table_name, map<int, int> ForDeleteIndex);
+	
 	//Show all indexs of this table;
 	//Return 1 if show index successfully, while return 0 if fails.
-	int ShowIndex(string Table_name);
+	//int ShowIndex(string Table_name);
 
-private:
-    IndexCluster* Index;
-    DBfile File_manager;
-};
-
-class IndexCluster{
-public:
-    IndexCluster() = default;
-private:
-    //eq: Index["student"].insert,delete,find...
-    //changer when you need another key B+ tree
-    vector<map<string,shared_ptr<BplusTree>>> Index;
+	//Find records fit condition
+	//We promise the attributes in "Selet_Condition" always have index
+	//Return index of block and ofset of record
+	//map<int, int> Select(string Table_name, vector<condition> Select_Condition);
 };
 
 
