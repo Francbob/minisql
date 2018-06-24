@@ -7,6 +7,13 @@
 // 0: int, n=1-255: char(n), 256:float
 typedef int ValueType;
 
+#ifndef TYPE_FLOAT
+#define TYPE_FLOAT 256
+#endif // !FLOAT
+#ifndef TYPE_INT
+#define TYPE_INT 0
+#endif // !INT
+
 const char PadChar = '0';
 
 /// Uses a union to represent three data types.
@@ -17,10 +24,50 @@ struct ValueStruct
 	double FLOAT;
 	ValueType TYPE;
 
+	ValueStruct() {};
+
 	ValueStruct(std::string s, int i, double f, ValueType t) { CHAR_N = s; INT = i; FLOAT = f; TYPE = t; };
+
+	// 在Interpreter读的时候用
 	ValueStruct(std::string input)
 	{
+		if (input[0] == '\'' && input[input.size() - 1] == '\'')
+		{
+			string char_n = input.substr(1, input.size() - 2);
+			TYPE = char_n.size();
+			CHAR_N = char_n;
+		}
+		else if (input.find('.') != string::npos)
+		{
+			TYPE = TYPE_FLOAT;
+			FLOAT = std::stod(input);
+		}
+		else
+		{
+			TYPE = TYPE_INT;
+			INT = std::stoi(input);
+		}
+	}
 
+	// 知道Type的时候用
+	ValueStruct(std::string input, ValueType type)
+	{
+		if (type == TYPE_INT)
+		{
+			TYPE = TYPE_INT;
+			INT = std::stoi(input);
+		}
+		else if (type == TYPE_FLOAT)
+		{
+			TYPE = TYPE_FLOAT;
+			FLOAT = std::stod(input);
+		}
+		else
+		{
+			TYPE = type;
+			string char_n = input.substr(0, type);
+			CHAR_N = char_n;
+		}
 	}
 
 	bool operator== (ValueStruct &value_to_compare)
@@ -89,13 +136,13 @@ struct ValueStruct
 		if (TYPE == 0)
 		{
 			char result[8];
-			sprintf(result, "%08d", INT);
+			sprintf(result, "%8d", INT);
 			return result;
 		}
 		else if (TYPE == 256)
 		{
 			char result[16];
-			sprintf(result, "%16lf", FLOAT);
+			sprintf(result, "%16.7lf", FLOAT);
 			return result;
 		}
 		else
@@ -125,9 +172,19 @@ struct ValueStruct
 		else
 			return TYPE;
 	}
+
+	void print()
+	{
+		if (TYPE == 0)
+			cout << INT;
+		else if (TYPE == 256)
+			cout << FLOAT;
+		else
+			cout << CHAR_N;
+	}
 };
 
-class Attribute{
+class Attribute {
 private:
 	std::string name;
 	ValueType type;
@@ -136,9 +193,9 @@ public:
 	Attribute(std::string n, ValueType t, int u);
 	Attribute() = default;
 	~Attribute() {};
-	std::string get_name(){return name;}
-	ValueType get_type(){return type;}
-	int get_ifunique(){return unique;}
+	std::string get_name() { return name; }
+	ValueType get_type() { return type; }
+	int get_ifunique() { return unique; }
 	int get_length();
 };
 

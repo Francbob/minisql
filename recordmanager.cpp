@@ -1,6 +1,7 @@
 #include "recordmanager.h"
 #include <direct.h>
 #include <cassert>
+#include <list>
 
 //Return 1 if drop a table successfully, while return 0 if fails.
 int RecordManager::DropTable(string tableName)
@@ -21,13 +22,19 @@ int RecordManager::Select(string tableName, vector<RecordLocation> Index_find)
 	changeTB(tableName);
 	for (auto index : Index_find)
 	{
-		block ai(index.block_index, bm.get_table(), bm);
-		for (int i = 0; i < ai.get_attr_num(); i++)
+		for (int i = 0; ; i++)
 		{
-			cout << ai.get_attr(index.offset, i) << "\t|\t";
+			try
+			{
+				cout << find_attr(index.block_index, index.offset, i) << "\t|\t";
+			}
+			catch (exception &ex)
+			{
+				break;
+			}
 		}
 	}
-
+	// TODO: ??? unique怎么处理？
 	cout << endl;
 }
 
@@ -35,25 +42,79 @@ int RecordManager::Select(string tableName, vector<RecordLocation> Index_find)
 //Return 0 if select failed
 int RecordManager::Select(string Table_name, vector<condition> Condition_no_index)
 {
-	changeTB(Table_name);
-	
+	changeTB(Table_name); // attribute's num is destined
+	// 内层：按次序的每个记录的属性，外层：所有的记录
+	list<vector<string>> selected_records;
+	for (int i = 0; i < get_size(); i++)
+	{
+		for (int j = 0; j < current_attribute_num; j++)
+		{
+			vector<string> tmp;
+			// TODO: 这一行的调用还有点问题（ValueStruct)
+			tmp[j] = find_attr(? , i, j);
+			selected_records.push_back(tmp);
+		}
+	}
+
+	for (auto i : Condition_no_index)
+	{
+		// C#会有一个foreach的bug，不清楚C++有没有，小心为上
+		for (vector<string> record : selected_records)
+		{
+			if (!i.compare(record[? ]))
+				selected_records.remove(record);
+		}
+	}
+
+	cout << selected_records.size() << " records found:\n";
+	for (auto record : selected_records)
+	{
+		for (auto attri_value : record)
+		{
+			cout << attri_value << "\t|\t";
+		}
+		cout << endl;
+	}
 }
 
 //Select with some index, conditino without index is in Condition_no_index
 //Return 0 if select failed
 int RecordManager::Select(string Table_name, vector<RecordLocation> Index_find, vector<condition> Condition_no_index)
 {
-
+	// 基本等于上两个之和，到时候合并就好了
 }
 
 //Select without any condition
 //Return 0 if select failed
 int RecordManager::Select(string Table_name)
 {
-	int value = changeTB(Table_name); // ???原先是不知道一共有多少个block的
+	changeTB(Table_name); // ???原先是不知道一共有多少个block的
+	list<vector<string>> selected_records;
+	for (int i = 0; i < get_size(); i++)
+	{
+		for (int j = 0; j < current_attribute_num; j++)
+		{
+			vector<string> tmp;
+			// TODO: 这一行的调用还有点问题（ValueStruct)
+			tmp[j] = find_attr(? , i, j);
+			selected_records.push_back(tmp);
+		}
+	}
+	
+	cout << selected_records.size() << " records found:\n";
+	for (auto record : selected_records)
+	{
+		for (auto attri_value : record)
+		{
+			cout << attri_value << "\t|\t";
+		}
+		cout << endl;
+	}
+
+	/*
 	for (int i = 0; i < value; i++)
 	{
-		block ai(i, bm.get_table(), bm); 
+		block ai(i, bm.get_table(), bm);
 		for (int i = 0; i < ai.get_size(); i++) // 这里也不知道有多少个tuple
 		{
 			for (int j = 0; j < ai.get_attr_num(); j++)
@@ -61,6 +122,7 @@ int RecordManager::Select(string Table_name)
 			cout << endl;
 		}
 	}
+	*/
 }
 
 //Insert some tuples into a table;

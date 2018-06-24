@@ -8,13 +8,6 @@
 #include <queue>
 #include <map>
 
-#ifndef TYPE_FLOAT
-#define TYPE_FLOAT 256
-#endif // !FLOAT
-#ifndef TYPE_INT
-#define TYPE_INT 0
-#endif // !INT
-
 class CommandFormatException : std::exception {};
 class OpenFileException : std::exception {};
 class OutOfBoundsException : std::exception {};
@@ -153,7 +146,6 @@ private:
 	// 工具函数
 	std::vector<std::string> Split(std::string instruction);
 	ValueType getType(std::string typestr, std::string count_str);
-	ValueStruct getValue(std::string input);
 	bool quit;				// 是否退出
 	bool errorAbort;		// 是否遇到错误
 	char delimiter;			// 分隔符，默认为';'

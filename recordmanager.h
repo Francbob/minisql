@@ -11,6 +11,7 @@
 class RecordManager {
 private:
 	buffermanager bm;
+	int current_attribute_num;
 public:
 	RecordManager() {};
 	~RecordManager() {

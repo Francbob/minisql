@@ -179,7 +179,7 @@ void Interpreter::ParseCommand()
 				PrintErrorMsg("Can't parse " + words[4]);
 			for (int i = 5; i < words.size(); )
 			{
-				ValueStruct value = getValue(words[i]);
+				ValueStruct value = ValueStruct(words[i]);
 				is.data.push_back(value);
 				i += 2;
 			}
@@ -208,7 +208,7 @@ void Interpreter::ParseCommand()
 					cond.type_compare = cond.getOpType(words[i++]);
 					if (cond.type_compare == cond.unknown)
 						PrintErrorMsg("Expected an operator, now " + words[i]);
-					cond.value = getValue(words[i++]);
+					cond.value = ValueStruct(words[i++]);
 					if (i < words.size())
 					{
 						if (words[i] == "and")
@@ -249,7 +249,7 @@ void Interpreter::ParseCommand()
 					cond.type_compare = cond.getOpType(words[i++]);
 					if (cond.type_compare == cond.unknown)
 						PrintErrorMsg("Expected an operator, now " + words[i]);
-					cond.value = getValue(words[i++]);
+					cond.value = ValueStruct(words[i++]);
 					if (i < words.size())
 					{
 						if (words[i] == "and")
@@ -289,6 +289,7 @@ void Interpreter::ExecuteScript()
 
 void Interpreter::PrintErrorMsg(string message)
 {
+	errorAbort = true;
 	cout << "[Error] Command: " << current_command.text << "\n\tReason: " << message << endl;
 }
 
@@ -371,26 +372,4 @@ ValueType Interpreter::getType(string typestr, string count_str)
 			return char_length;
 		}
 	}
-}
-
-ValueStruct Interpreter::getValue(string input)
-{
-	ValueStruct value;
-	if (input[0] == '\'' && input[input.size() - 1] == '\'')
-	{
-		string char_n = input.substr(1, input.size() - 2);
-		value.TYPE = char_n.size();
-		value.CHAR_N = char_n;
-	}
-	else if (input.find('.') != string::npos)
-	{
-		value.TYPE = TYPE_FLOAT;
-		value.FLOAT = std::stod(input);
-	}
-	else
-	{
-		value.TYPE = TYPE_INT;
-		value.INT = std::stoi(input);
-	}
-	return value;
 }
