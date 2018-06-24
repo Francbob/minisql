@@ -2,6 +2,8 @@
 #include <direct.h>
 #include <cassert>
 #include <list>
+#include <vector>
+#include <map>
 
 //Return 1 if drop a table successfully, while return 0 if fails.
 int RecordManager::DropTable(string tableName)
@@ -22,16 +24,9 @@ int RecordManager::Select(string tableName, vector<RecordLocation> Index_find)
 	changeTB(tableName);
 	for (auto index : Index_find)
 	{
-		for (int i = 0; ; i++)
+		for (int i = 0; i < current_attribute_num; i++)
 		{
-			try
-			{
-				cout << find_attr(index.block_index, index.offset, i) << "\t|\t";
-			}
-			catch (exception &ex)
-			{
-				break;
-			}
+			cout << find_attr(index.block_index, index.offset, i) << "\t|\t";
 		}
 	}
 	// TODO: ??? unique怎么处理？
@@ -47,13 +42,13 @@ int RecordManager::Select(string Table_name, vector<condition> Condition_no_inde
 	list<vector<string>> selected_records;
 	for (int i = 0; i < get_size(); i++)
 	{
+		vector<string> tmp;
 		for (int j = 0; j < current_attribute_num; j++)
 		{
-			vector<string> tmp;
 			// TODO: 这一行的调用还有点问题（ValueStruct)
 			tmp[j] = find_attr(? , i, j);
-			selected_records.push_back(tmp);
 		}
+		selected_records.push_back(tmp);
 	}
 
 	for (auto i : Condition_no_index)
@@ -100,7 +95,7 @@ int RecordManager::Select(string Table_name)
 			selected_records.push_back(tmp);
 		}
 	}
-	
+
 	cout << selected_records.size() << " records found:\n";
 	for (auto record : selected_records)
 	{
@@ -162,23 +157,73 @@ int RecordManager::Delete(string tableName)
 //Delete if all attributes in condition have index
 //Return the number of tuples you delete
 //For each tuple you delete, you need add its location(index of block and this record's offset) to map "Delete_record"
-int RecordManager::Delete(string tableName, vector<ValueStruct> Index_find, map<int, int> &Delete_record)
+int RecordManager::Delete(string tableName, vector<RecordLocation> Index_find, map<int, vector<string>> &del_vector)
 {
-	int value = changeTB(tableName);
-	for (auto i : Index_find)
+	changeTB(tableName);
+	for (auto index : Index_find)
 	{
+		for (int i = 0; i < current_attribute_num; i++)
+		{
+			delete_record(index.block_index, index.offset);
+			del_vector[i].push_back(find_attr(index.block_index, index.offset, i));
+		}
 	}
 }
 
 //Delete without any condition
 //Return the number of tuples you delete
 //For each tuple you delete, you need add its location(index of block and this record's offset) to map "Delete_record"
-int Delete(string Table_name, vector<condition> Condition_no_index, map<int, int> &Delete_record);
+int RecordManager::Delete(string Table_name, vector<condition> Condition_no_index)
+{
+	changeTB(Table_name); // attribute's num is destined
+						  // 内层：按次序的每个记录的属性，外层：所有的记录
+	struct del_info
+	{
+		string result;
+		int block_index;
+		int record_index;
+	};
+	list<vector<del_info>> del_list;
+	for (int i = 0; i < get_size(); i++)
+	{
+		vector<del_info> tmp;
+		for (int j = 0; j < current_attribute_num; j++)
+		{
+			// TODO: 这一行的调用还有点问题（ValueStruct)
+			del_info tmp_info = { find_attr(? , i, j), ? , i };
+			tmp.push_back(tmp_info);
+		}
+		del_list.push_back(tmp);
+	}
+
+	for (auto i : Condition_no_index)
+	{
+		// C#会有一个foreach的bug，不清楚C++有没有，小心为上
+		for (auto record : del_list)
+		{
+			if (!i.compare(record[?].result))
+				del_list.remove(record);
+		}
+	}
+
+	cout << del_list.size() << " records deleted.\n";
+	for (auto record : del_list)
+	{
+		for (auto attri_value : record)
+		{
+			delete_record(attri_value.block_index, attri_value.record_index);
+		}
+		cout << endl;
+	}
+}
 
 //Delete with some index, condition without index is in "Condition_no_index"
 //Return the number of tuples you delete
 //For each tuple you delete, you need add its location(index of block and this record's offset) to map "Delete_record"
-int Delete(string Table_name, map<int, int> Index_find, vector<condition> Condition_no_index, map<int, int> &Delete_record);
+int RecordManager::Delete(string Table_name, vector<RecordLocation> Index_find, vector<condition> Condition_no_index, map<int, vector<string>> &del_vector)
+{
+
+}
 
 // 以下为郑成博提供的
 
@@ -208,25 +253,84 @@ string RecordManager::find_attr(int block_index, int record_index, int attr_inde
 	return ai.get_attr(record_index, attr_index);
 }
 
+/*
+bool RecordManager::create
+(const std::string &table,
+	vector<Attribute> vector_Attribute) {
+	//table should not already exist
+	assert(!bm.changeTB(table));
+	//fetch information of new table
+	int attr_num = vector_Attribute.size();
+	current_attribute_num = attr_num;
+	auto attr_len = new int[attr_num];
+	for (int i = 0; i < attr_num; ++i) {
+		attr_len[i] = vector_Attribute[i].get_length();
+	}
+	//auto iter = Buffer.begin();
+	int i = 0;
+	//get size
+	block sample(i, attr_num, attr_len);
+	block_size = sample.get_size();
+	//initialize all block in the Buffer at once
+	while (i < 100) {
+		auto ptr = new block(i, attr_num, attr_len);
+		ptr->write2buffer(&bm);
+		i++;
+		//        ptr->setDirty();
+		//        ptr->write2disk(File_Manager);
+		//        (*iter) = ptr;
+		//        iter++;
+		//        i++;
+	}
+
+	return true;
+}
+*/
+
+string RecordManager::find_attr(int block_index, int record_index, int attr_index) {
+	block ai(block_index, bm.get_table(), bm);
+	if (ai.isValid(record_index))
+		return ai.get_attr(record_index, attr_index);
+	else
+		return "";
+}
+
+//existed
 int RecordManager::changeTB(const string &a) {
 	bm.changeTB(a);
 	bm.read_disk();
-	return 99999;
+	block test(blcok_start_index, bm.get_table(), bm);
+	block_size = test.get_size();
+	current_attribute_num = test.get_attr_num();
 }
 
-int RecordManager::insert(const string& record) {
+int RecordManager::Insert(const string& record, RecordLocation &location) {
 	//    block* model = *Buffer.begin();
 	//    //create before insert
 	//    assert(model);
 	int i = 1;
 	int target_index = bm.find_free();
 	if (!target_index) {
-		//?
+		//疑问
 	}
 	int index = 0;
 	block* target = new block(target_index, bm.get_table(), bm);
-
+	
 	int pos = target->insert_record(record);
 	target->write2buffer(&bm);
+	location.block_index = target_index;
+	location.offset = pos;
 	return pos;
+}
+
+bool RecordManager::delete_record(int block_index, int record_index) {
+	block ai(block_index, bm.get_table(), bm);
+
+	if (ai.delete_record(record_index))
+	{
+		bm.setDirty(block_index);
+		ai.write2buffer(&bm);
+		return true;
+	}
+	return false;
 }

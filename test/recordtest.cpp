@@ -7,7 +7,7 @@ int main(){
 //    bm.changeDB("DB");
 //    bm.changeTB("test3");
 //    bm.read_disk();
-    recordmanager rm;
+    RecordManager rm;
 //    vector<Attribute> vector_Attribute;
 ////    Attribute ai("a",0,4,0);
 ////    Attribute bi("b",4,2,0);
