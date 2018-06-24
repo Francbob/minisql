@@ -80,7 +80,7 @@ class Attribute{
 private:
 	std::string name;
 	ValueType type;
-	int unique ;     //0:unique  1:not unique
+	int unique;     //0:unique  1:not unique
 public:
 	Attribute(std::string n, ValueType t, int u);
 	Attribute() = default;

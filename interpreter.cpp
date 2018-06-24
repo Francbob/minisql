@@ -144,7 +144,7 @@ void Interpreter::ParseCommand()
 			ci.columnName = words[6];
 			if (words.size() > 8)
 				PrintErrorMsg("Can't parse " + words[8]);
-			api.API_CreateIndex(ci.tableName, ci.indexName, ci.columnName);
+			api.API_CreateIndex(ci.tableName, ci.columnName, ci.indexName);
 		}
 	}
 	else if (words[0] == "drop")
@@ -183,8 +183,7 @@ void Interpreter::ParseCommand()
 				is.data.push_back(value);
 				i += 2;
 			}
-			/// TODO: ¸Äapi
-			api.API_Insert(is.tableName, is.data);
+			api.API_Insert(is.tableName, is.data); // is.data: vector<ValueStruct>
 		}
 		else
 			PrintErrorMsg("Can't parse " + words[1]);
