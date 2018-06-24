@@ -18,7 +18,7 @@ void API::API_CreateTable(string Table_name, vector<Attribute> set_Attribute, ve
 		
 		//Create table
 		int flag, i;
-		flag = ptrRecord->CreateTable(Table_name,set_Attribute, PrimaryKey);
+		flag = ptrRecord->CreateTable(Table_name,set_Attribute);
 		if(flag==0){
 			cout<<"Failed to create a table"<< endl;
 			return;
@@ -285,7 +285,7 @@ void API::API_Delete(string Table_name, vector<condition> delete_condition){
 		vector<condition> Condition_with_index, Condition_no_index;
 		vector<string> Judge;
 		map<int, int> Index_find;
-		map<int, int> Delete_record
+		map<int, int> Delete_record;
 		int i, flag, flag_delete;
 
 		//Judge records

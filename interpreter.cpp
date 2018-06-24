@@ -260,13 +260,12 @@ void Interpreter::ParseCommand()
 					sl.whereClause.push_back(cond);
 				}
 			}
-			api.
-			api.API_Select(sl.targetList[0], sl.whereClause);
+			api.API_SelectAll(sl.targetList[0], sl.whereClause);
 		}
 		else
 		{
 			sl.hasWhereClause = false;
-			api.API_Select(sl.targetList[0]);
+			api.API_SelectAll(sl.targetList[0]);
 		}
 	}
 }

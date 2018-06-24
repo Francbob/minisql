@@ -16,6 +16,12 @@ class CatalogManager;
 class RecordManager;
 class IndexManager;
 
+struct RecordLocation
+{
+	int block_index;
+	int offset;
+};
+
 class API{
 public:
 	API(){};
