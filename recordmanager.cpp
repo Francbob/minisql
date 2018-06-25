@@ -8,8 +8,9 @@
 #include <map>
 
 //Return 1 if drop a table successfully, while return 0 if fails.
+using namespace std;
 
-string RecordManager::string PadStringToOutput(string padString)
+string RecordManager::PadStringToOutput(string padString)
 {
 	int valueType;
 	if (padString.size() > 8 && padString[8] == '.')
@@ -80,7 +81,7 @@ int RecordManager::Select(string tableName, vector<RecordLocation> Index_find)
 	{
 		for (int i = 0; i < current_attribute_num; i++)
 		{
-			cout << find_attr(index.block_index, index.offset, i) << "\t|\t";
+			cout << PadStringToOutput(find_attr(index.block_index, index.offset, i)) << "\t|\t";
 		}
 	}
 	// TODO: ??? uniqueÔõÃ´´¦Àí£¿
@@ -123,7 +124,7 @@ int RecordManager::Select(string Table_name, vector<condition> Condition_no_inde
 	{
 		for (auto attri_value : record)
 		{
-			cout << attri_value << "\t|\t";
+			cout << PadStringToOutput(attri_value) << "\t|\t";
 		}
 		cout << endl;
 	}
@@ -165,7 +166,7 @@ int RecordManager::Select(string tableName, vector<RecordLocation> Index_find, v
 	{
 		for (auto attri_value : record)
 		{
-			cout << attri_value.value << "\t|\t";
+			cout << PadStringToOutput(attri_value.value) << "\t|\t";
 		}
 		cout << endl;
 	}
@@ -196,7 +197,7 @@ int RecordManager::Select(string Table_name)
 	{
 		for (auto attri_value : record)
 		{
-			cout << attri_value << "\t|\t";
+			cout << PadStringToOutput(attri_value) << "\t|\t";
 		}
 		cout << endl;
 	}
