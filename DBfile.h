@@ -24,7 +24,7 @@ public:
     bool setTable(const string& T_) {
         table = T_;
         const char* path = get_path().c_str();
-        if(PathFileExists(path)){
+        if(!PathFileExists(path)){
             _mkdir(path);
             return false;
         }

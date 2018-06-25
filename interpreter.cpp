@@ -17,13 +17,15 @@ Interpreter::Interpreter()
 
 void Interpreter::Interact()
 {
-	while (quit != true && errorAbort != true)
+	while (quit != true)
 	{
 		GetCommand();
 		while (!commands.empty())
 		{
 			ParseCommand();
-			DisplayResult();
+			if (errorAbort == true)
+				while (!commands.empty()) commands.pop();
+			errorAbort = false;
 		}
 	}
 }
@@ -56,12 +58,18 @@ void Interpreter::ParseCommand()
 	{
 		// 判断参数是否合法
 		if (words.size() > 2)
+		{
 			PrintErrorMsg("execfile can only receive one extra argument.");
+			return;
+		}
 		string &filename = words[1];
 		ifstream file_in(filename);
 		// 判断文件是否存在
-		if (!file_in)
+		if (!file_in.is_open())
+		{
 			PrintErrorMsg("Fail to open target file.");
+			return;
+		}
 		while (!file_in.eof())
 		{
 			string buffer;
@@ -89,7 +97,10 @@ void Interpreter::ParseCommand()
 					i += 1;
 					// 查重
 					if (ct.columns.find(column_name) != ct.columns.end())
+					{
 						PrintErrorMsg("Duplicate column names: " + column_name);
+						return;
+					}
 
 					string column_type = words[i];
 					i += 1;
@@ -100,6 +111,7 @@ void Interpreter::ParseCommand()
 						if (find(ct.primaryKeys.begin(), ct.primaryKeys.end(), words[i + 1]) != ct.primaryKeys.end())
 						{
 							PrintErrorMsg("Detected duplicate primary key " + words[i + 1]);
+							return;
 						}
 						else
 							ct.primaryKeys.push_back(words[i + 1]);
@@ -134,15 +146,27 @@ void Interpreter::ParseCommand()
 			CreateIndexStmt ci;
 			ci.indexName = words[2];
 			if (words[3] != "on")
+			{
 				PrintErrorMsg("Expected 'on', now " + words[3]);
+				return;
+			}
 			else if (words[5] != "(")
+			{
 				PrintErrorMsg("Expected '(', now " + words[5]);
+				return;
+			}
 			else if (words[7] != ")")
+			{
 				PrintErrorMsg("Expected ')', now " + words[7]);
+				return;
+			}
 			ci.tableName = words[4];
 			ci.columnName = words[6];
 			if (words.size() > 8)
+			{
 				PrintErrorMsg("Can't parse " + words[8]);
+				return;
+			}
 			api.API_CreateIndex(ci.tableName, ci.columnName, ci.indexName);
 		}
 	}
@@ -151,7 +175,10 @@ void Interpreter::ParseCommand()
 		if (words[1] == "table")
 		{
 			if (words.size() > 3)
+			{
 				PrintErrorMsg("Can't parse " + words[3]);
+				return;
+			}
 			DropTableStmt dt;
 			dt.tableName = words[2];
 			api.API_DropTable(dt.tableName);
@@ -159,7 +186,10 @@ void Interpreter::ParseCommand()
 		else if (words[1] == "index")
 		{
 			if (words.size() > 3)
+			{
 				PrintErrorMsg("Can't parse " + words[3]);
+				return;
+			}
 			DropIndexStmt di;
 			di.indexName = words[2];
 			api.API_DropIndex(di.indexName);
@@ -173,9 +203,15 @@ void Interpreter::ParseCommand()
 			is.tableName = words[2];
 			int i = 0;
 			if (words[3] != "values")
+			{
 				PrintErrorMsg("Can't parse " + words[3]);
+				return;
+			}
 			if (words[4] != "(")
+			{
 				PrintErrorMsg("Can't parse " + words[4]);
+				return;
+			}
 			for (size_t i = 5; i < words.size(); )
 			{
 				ValueStruct value = ValueStruct(words[i]);
@@ -185,18 +221,27 @@ void Interpreter::ParseCommand()
 			api.API_Insert(is.tableName, is.data); // is.data: vector<ValueStruct>
 		}
 		else
+		{
 			PrintErrorMsg("Can't parse " + words[1]);
+			return;
+		}
 	}
 	else if (words[0] == "delete")
 	{
 		DeleteFromStmt df;
 		if (words[1] != "from")
+		{
 			PrintErrorMsg("Can't parse " + words[1]);
+			return;
+		}
 		df.tableName = words[2];
 		if (words.size() > 3)
 		{
 			if (words[3] != "where")
+			{
 				PrintErrorMsg("Expected 'where', now " + words[3]);
+				return;
+			}
 			else
 			{
 				df.hasWhereClause = true;
@@ -206,21 +251,27 @@ void Interpreter::ParseCommand()
 					cond.Attribute_name = words[i++];
 					cond.type_compare = cond.getOpType(words[i++]);
 					if (cond.type_compare == cond.unknown)
+					{
 						PrintErrorMsg("Expected an operator, now " + words[i]);
+						return;
+					}
 					cond.value = ValueStruct(words[i++]);
 					if (i < words.size())
 					{
 						if (words[i] == "and")
 							i++;
 						else
+						{
 							PrintErrorMsg("Expected 'and', now " + words[i]);
+							return;
+						}
 					}
 					df.whereClause.push_back(cond);
 				}
 			}
 			api.API_Delete(df.tableName, df.whereClause);
 		}
-		else 
+		else
 		{
 			df.hasWhereClause = false;
 			api.API_Delete(df.tableName);
@@ -230,14 +281,23 @@ void Interpreter::ParseCommand()
 	{
 		SelectStmt sl;
 		if (words[1] != "*")
+		{
 			PrintErrorMsg("Expected '*', now " + words[1]);
+			return;
+		}
 		if (words[2] != "from")
+		{
 			PrintErrorMsg("Expected 'from', now " + words[2]);
+			return;
+		}
 		sl.fromClause.push_back(words[3]);
 		if (words.size() > 4)
 		{
 			if (words[4] != "where")
+			{
 				PrintErrorMsg("Expected 'where', now " + words[4]);
+				return;
+			}
 			else
 			{
 				sl.hasWhereClause = true;
@@ -247,24 +307,30 @@ void Interpreter::ParseCommand()
 					cond.Attribute_name = words[i++];
 					cond.type_compare = cond.getOpType(words[i++]);
 					if (cond.type_compare == cond.unknown)
+					{
 						PrintErrorMsg("Expected an operator, now " + words[i]);
+						return;
+					}
 					cond.value = ValueStruct(words[i++]);
 					if (i < words.size())
 					{
 						if (words[i] == "and")
 							i++;
 						else
+						{
 							PrintErrorMsg("Expected 'and', now " + words[i]);
+							return;
+						}
 					}
 					sl.whereClause.push_back(cond);
 				}
 			}
-			api.API_SelectAll(sl.targetList[0], sl.whereClause);
+			api.API_SelectAll(sl.fromClause[0], sl.whereClause);
 		}
 		else
 		{
 			sl.hasWhereClause = false;
-			api.API_SelectAll(sl.targetList[0]);
+			api.API_SelectAll(sl.fromClause[0]);
 		}
 	}
 }
@@ -310,6 +376,7 @@ vector<string> Interpreter::Split(string instruction)
 		{
 			string errorMsg = "MiniSQL only supports ASCII chars.";
 			PrintErrorMsg(errorMsg);
+			return vector<string>();
 		}
 		if (stopwords.find(i) != stopwords.end())
 		{
@@ -365,7 +432,10 @@ ValueType Interpreter::getType(string typestr, string count_str)
 			}
 		char_length = std::stoi(count_str);
 		if (char_length <= 0)
+		{
 			PrintErrorMsg("Invalid input " + typestr + "(" + count_str + "). Expected an integer.");
+			return -1;
+		}
 		else
 		{
 			return char_length;
