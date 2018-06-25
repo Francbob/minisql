@@ -84,7 +84,7 @@ void Interpreter::ParseCommand()
 			{
 				CreateTableStmt ct;
 				ct.tableName = tableName;
-				for (int i = 4; i < words.size(); )
+				for (size_t i = 4; i < words.size(); )
 				{
 					string column_name = words[i];
 					i += 1;
@@ -177,7 +177,7 @@ void Interpreter::ParseCommand()
 				PrintErrorMsg("Can't parse " + words[3]);
 			if (words[4] != "(")
 				PrintErrorMsg("Can't parse " + words[4]);
-			for (int i = 5; i < words.size(); )
+			for (size_t i = 5; i < words.size(); )
 			{
 				ValueStruct value = ValueStruct(words[i]);
 				is.data.push_back(value);
@@ -201,7 +201,7 @@ void Interpreter::ParseCommand()
 			else
 			{
 				df.hasWhereClause = true;
-				for (int i = 4; i < words.size(); )
+				for (size_t i = 4; i < words.size(); )
 				{
 					condition cond;
 					cond.Attribute_name = words[i++];
@@ -242,7 +242,7 @@ void Interpreter::ParseCommand()
 			else
 			{
 				sl.hasWhereClause = true;
-				for (int i = 5; i < words.size(); )
+				for (size_t i = 5; i < words.size(); )
 				{
 					condition cond;
 					cond.Attribute_name = words[i++];

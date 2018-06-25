@@ -27,6 +27,8 @@ bool condition::compare(string padString)
 		return curString > padString;
 	case greater_or_equ:
 		return curString >= padString;
+	default:
+		throw exception();
 	}
 }
 
@@ -44,6 +46,8 @@ bool condition::compare(ValueStruct &value_to_compare) {
 		return value > value_to_compare;
 	case greater_or_equ:
 		return value >= value_to_compare;
+	default:
+		throw exception();
 	}
 }
 

@@ -1,4 +1,5 @@
 #include "recordmanager.h"
+#include "DBfile.h"
 #include <direct.h>
 #include <cassert>
 #include <list>
@@ -13,7 +14,7 @@ int RecordManager::DropTable(string tableName)
 		return false;
 	*/
 	string dirName = tableName;
-	rmdir(dirName.c_str());
+	_rmdir(dirName.c_str());
 	return true;
 }
 
@@ -59,8 +60,8 @@ int RecordManager::Select(string Table_name, vector<condition> Condition_no_inde
 		// C#会有一个foreach的bug，不清楚C++有没有，小心为上
 		for (vector<string> record : selected_records)
 		{
-			if (!i.compare(record[cm->GetAttrIndex(Table_name, i.Attribute_name)]));
-			selected_records.remove(record);
+			if (!i.compare(record[cm->GetAttrIndex(Table_name, i.Attribute_name)]))
+				selected_records.remove(record);
 		}
 	}
 
@@ -123,7 +124,6 @@ int RecordManager::Select(string Table_name)
 {
 	changeTB(Table_name); // ???原先是不知道一共有多少个block的
 	list<vector<string>> selected_records;
-	list<vector<string>> selected_records;
 	for (int block = 0; block < cm->GetBlockNum(Table_name); block++)
 	{
 		for (int recordPos = 0; recordPos < get_size(); recordPos++)
@@ -155,43 +155,26 @@ int RecordManager::Select(string Table_name)
 //Return 1 if insert successfully, while return 0 if fails.
 
 // 成博提供的
-int RecordManager::Insert(const string& record, RecordLocation &location) {
-	//    block* model = *Buffer.begin();
-	//    //create before insert
-	//    assert(model);
-	int i = 1;
-	int target_index = bm.find_free();
-	if (!target_index) {
-		//疑问
-	}
-	int index = 0;
-	block* target = new block(target_index, bm.get_table(), bm);
-
-	int pos = target->insert_record(record);
-	target->write2buffer(&bm);
-	location.block_index = target_index;
-	location.offset = pos;
-	return pos;
-}
-
-int RecordManager::Insert(string tableName, vector<ValueStruct> insert_vector)
+int RecordManager::Insert(string tableName, vector<ValueStruct> insert_vector, RecordLocation &location)
 {
 	string record;
 	for (auto i : insert_vector)
 	{
 		record += i.PadToString();
 	}
-
 	changeTB(tableName);
 	int target_index = bm.find_free();
 	if (!target_index) {
-		return 0;
+		//return 0
 	}
+	int index = 0;
 	block* target = new block(target_index, bm.get_table(), bm);
 	assert(target->get_size() == record.size());
 	int pos = target->insert_record(record);
 	target->write2buffer(&bm);
-	return 0;
+	location.block_index = target_index;
+	location.offset = pos;
+	return 1;
 }
 
 //Delete all tuples in this table;
@@ -247,8 +230,8 @@ int RecordManager::Delete(string tableName, vector<condition> Condition_no_index
 		// C#会有一个foreach的bug，不清楚C++有没有，小心为上
 		for (auto record : del_list)
 		{
-			if (!i.compare(record[cm->GetAttrIndex(tableName, i.Attribute_name)].value));
-			del_list.remove(record);
+			if (!i.compare(record[cm->GetAttrIndex(tableName, i.Attribute_name)].value))
+				del_list.remove(record);
 		}
 	}
 
@@ -297,7 +280,7 @@ int RecordManager::Delete(string tableName, vector<RecordLocation> Index_find, v
 	for (vector<del_info> record : del_list)
 	{
 		//for (del_info attri_value : record)
-		for (int i = 0; i < record.size(); i++)
+		for (size_t i = 0; i < record.size(); i++)
 		{
 			delete_record(record[i].block_index, record[i].record_index);
 			del_vector[i].push_back(record[i].value);
@@ -372,6 +355,7 @@ string RecordManager::find_attr(int block_index, int record_index, int attr_inde
 int RecordManager::changeTB(const string &a) {
 	bm.changeTB(a);
 	bm.read_disk();
+	const int block_start_index = 1;
 	block test(block_start_index, bm.get_table(), bm);
 	block_size = test.get_size();
 	current_attribute_num = test.get_attr_num();

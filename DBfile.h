@@ -9,6 +9,11 @@
 #include <direct.h>
 #include <io.h>
 #include <string>
+
+#include <Windows.h>                 //Windows API   FindFirstFile  
+#include <Shlwapi.h>  
+#pragma comment(lib, "shlwapi.lib")  //Windows API   PathFileExists 
+
 using namespace std;
 class DBfile {
 public:
@@ -19,8 +24,8 @@ public:
     bool setTable(const string& T_) {
         table = T_;
         const char* path = get_path().c_str();
-        if(access(path, F_OK)){
-            mkdir(path);
+        if(PathFileExists(path)){
+            _mkdir(path);
             return false;
         }
         return true;

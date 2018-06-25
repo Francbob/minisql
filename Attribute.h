@@ -5,7 +5,7 @@
 #include <string>
 
 // 0: int, n=1-255: char(n), 256:float
-typedef int ValueType;
+typedef size_t ValueType;
 
 #ifndef TYPE_FLOAT
 #define TYPE_FLOAT 256
@@ -33,11 +33,11 @@ struct ValueStruct
 	{
 		if (input[0] == '\'' && input[input.size() - 1] == '\'')
 		{
-			string char_n = input.substr(1, input.size() - 2);
+			std::string char_n = input.substr(1, input.size() - 2);
 			TYPE = char_n.size();
 			CHAR_N = char_n;
 		}
-		else if (input.find('.') != string::npos)
+		else if (input.find('.') != std::string::npos)
 		{
 			TYPE = TYPE_FLOAT;
 			FLOAT = std::stod(input);
@@ -65,7 +65,7 @@ struct ValueStruct
 		else
 		{
 			TYPE = type;
-			string char_n = input.substr(0, type);
+			std::string char_n = input.substr(0, type);
 			CHAR_N = char_n;
 		}
 	}
@@ -158,7 +158,7 @@ struct ValueStruct
 			}
 			else
 			{
-				CHAR_N.insert(CHAR_N.size(), TYPE - CHAR_N.size(), PadChar);
+				return CHAR_N.insert(CHAR_N.size(), TYPE - CHAR_N.size(), PadChar);
 			}
 		}
 	}
@@ -176,11 +176,11 @@ struct ValueStruct
 	void print()
 	{
 		if (TYPE == 0)
-			cout << INT;
+			std::cout << INT;
 		else if (TYPE == 256)
-			cout << FLOAT;
+			std::cout << FLOAT;
 		else
-			cout << CHAR_N;
+			std::cout << CHAR_N;
 	}
 };
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>        //used to transfer string and int
 #include <string>
+#include "Attribute.h"
 
 class condition{
 public:  

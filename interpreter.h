@@ -104,24 +104,12 @@ struct DeleteFromStmt
 class Interpreter
 {
 	/// 用于交互的API
-	static API api;
+	API api;
 
 	struct Command
 	{
 		std::string text;
 		std::vector<std::string> words;
-		enum Type
-		{
-			CREATE_TABLE = 0,
-			DROP_TABLE,
-			CREATE_INDEX,
-			DROP_INDEX,
-			SELECT,
-			INSERT,
-			DELETE,
-			QUIT,
-			EXECFILE
-		}commandType;
 
 		Command(std::string _text)
 		{
