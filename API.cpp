@@ -18,7 +18,7 @@ void API::API_CreateTable(string Table_name, vector<Attribute> set_Attribute, ve
 		
 		//Create table
 		int flag, i;
-		flag = ptrRecord->CreateTable(Table_name,set_Attribute);
+		flag = ptrRecord->CreateTable(Table_name,set_Attribute, PrimaryKey);
 		if(flag==0){
 			cout<<"Failed to create a table"<< endl;
 			return;
@@ -213,7 +213,7 @@ void API::API_SelectAll(string Table_name, vector<condition> select_condition){
 
 
 //Insert some tuples into this table
-void API::API_Insert(string Table_name, vector<string> insert_vector){
+void API::API_Insert(string Table_name, vector<ValueStruct> insert_vector){
 	if(!ptrCatalog->FindTable(Table_name)){
 		cout<<"There's not a table named "<<Table_name<<endl; 
 	}else{
@@ -226,17 +226,19 @@ void API::API_Insert(string Table_name, vector<string> insert_vector){
 		}
 		//insert records
 		bool flag_bool;
-		flag = ptrRecord->Insert(Table_name, insert_vector);
+		RecordLocation Location;
+		flag = ptrRecord->Insert(Table_name, insert_vector, Location);
 		if(flag==0){
 			cout<<"Failed to insert"<<endl;
 		}else{
-			map<string, string> Insert_index;
+			map<string, ValueStruct> Insert_index;
 			Insert_index = ptrCatalog->JudgeInsertIndex(Table_name, insert_vector);
 			//Add record number in catalog
 			//Record+=1;
 			flag_bool = ptrCatalog->InsertRecord(Table_name);
 			//Add index
-			flag = ptrIndex->AddIndex(Table_name, Insert_index);
+
+			flag = ptrIndex->AddIndex(Table_name, Insert_index, Location);
 			if(flag==0){
 				cout<<"Insert succeed but failed to add items into index"<<endl;
 			}else{
@@ -285,7 +287,7 @@ void API::API_Delete(string Table_name, vector<condition> delete_condition){
 		vector<condition> Condition_with_index, Condition_no_index;
 		vector<string> Judge;
 		map<int, int> Index_find;
-		map<int, int> Delete_record;
+		map<int, int> Delete_record
 		int i, flag, flag_delete;
 
 		//Judge records
@@ -298,6 +300,10 @@ void API::API_Delete(string Table_name, vector<condition> delete_condition){
 			return;
 		}
 
+//delete的时候，传给record一个map<int, string>，返回给我， 表示第几个属性和该属性的值
+//通过解析，传给index一个map<string, string>，表示index_name和值；
+//index还要知道table_name
+
 		bool flag_bool;
 		flag = API_IfAllIndex(Table_name, delete_condition, Condition_with_index, Condition_no_index);
 
@@ -305,12 +311,12 @@ void API::API_Delete(string Table_name, vector<condition> delete_condition){
 		if(flag==0 || flag==1){
 			Index_find = ptrIndex->Select(Table_name, Condition_with_index);
 			if(flag==0){
-				flag_delete = ptrRecord->Delete(Table_name, Index_find, &Delete_record);
+				flag_delete = ptrRecord->Delete(Table_name, Index_find,Delete_record);
 			}else if(flag == 1){
-				flag_delete = ptrRecord->Delete(Table_name, Index_find, Condition_no_index, &Delete_record);
+				flag_delete = ptrRecord->Delete(Table_name, Index_find, Condition_no_index, Delete_record);
 			}
 		}else if(flag==2){
-			flag_delete = ptrRecord->Delete(Table_name, Condition_no_index, &Delete_record);
+			flag_delete = ptrRecord->Delete(Table_name, Condition_no_index, Delete_record);
 		}
 
 		//Delete records in catalog
@@ -331,22 +337,20 @@ void API::API_Delete(string Table_name, vector<condition> delete_condition){
 }
 
 //Create an index of the giving set of attributes
-void API::API_CreateIndex(string Table_name, Attribute index_Attribute){
+void API::API_CreateIndex(string Table_name, string AttributeName, string indexName){
 	if(!ptrCatalog->FindTable(Table_name)){
 		cout<<"There's not a table named "<<Table_name<<endl; 
 	}else{
 		//Find whether there's already an index of these attributes
-		string FindIndex;
 		int i, flag; 
 		bool flag_bool;
-		FindIndex = index_Atribute.name;
-		if(ptrCatalog->WhetherIndex(Table_name, FindIndex)){
+		if(ptrCatalog->WhetherIndex(indexName)){
 			cout<<"There's already an index of this attribute."<<endl;
 			return;
 		}
 		
 		//Create index
-		flag = ptrIndex->CreateIndex(Table_name, index_Attribute);
+		flag = ptrIndex->CreateIndex(Table_name, AttributeName, indexName);
 		if(flag==0){
 			cout<<"Creating index fails."<<endl;
 		}else{
@@ -354,26 +358,22 @@ void API::API_CreateIndex(string Table_name, Attribute index_Attribute){
 		}
 		
 		//Add index in catalog "Indexs"
-		flag_bool = ptrCatalog->AddIndex(Table_name, FindIndex);
+		flag_bool = ptrCatalog->AddIndex(Table_name, AttributeName, indexname);
 	}
 	return;
 }
 
 //Drop an index of the givingattribute
-void API::API_DropIndex(string Table_name, string index_Attribute){
-	if(!ptrCatalog->FindTable(Table_name)){
-		cout<<"There's not a table named "<<Table_name<<endl; 
-	}else{
-		
+void API::API_DropIndex(string Index_name){
 		//Find whether there's an index of the giving set of attributes
 		int i, flag; 
 		bool flag_bool;
-		if(!ptrCatalog->WhetherIndex(Table_name, index_Attribute)){
+		if(!ptrCatalog->WhetherIndex(Index_name)){
 			cout<<"There's no index of this attribute."<<endl;
 			return;
 		}else{
 			//Drop index
-			flag = ptrIndex->DropIndex(Table_name, index_Attribute);
+			flag = ptrIndex->DropIndex(Index_name);
 			if(flag==0){
 				cout<<"Failed to drop index of these attributes."<<endl;
 			}else{
@@ -381,10 +381,9 @@ void API::API_DropIndex(string Table_name, string index_Attribute){
 			}
 			
 			//Drop inde in catalog "Indexs"
-			flag_bool = ptrCatalog->DeleteIndex(Table_name, index_Attribute);
+			flag_bool = ptrCatalog->DeleteIndex(Index_name);
 		}
-	}
-	return;
+		return;
 }
 
 //Show all indexs of this table

@@ -16,12 +16,6 @@ class CatalogManager;
 class RecordManager;
 class IndexManager;
 
-struct RecordLocation
-{
-	int block_index;
-	int offset;
-};
-
 class API{
 public:
 	API(){};
@@ -47,7 +41,7 @@ public:
 	void API_SelectAll(string Table_name, vector<condition> select_condition);
 	//It's a function of insert. You need to give a vector of some maps. 
     //Each map includes a stirng of attribute and a string of data to be inserted.
-	void API_Insert(string Table_name, vector<string> insert_vector);
+	void API_Insert(string Table_name, vector<ValueStruct> insert_vector);
 	
 	//It's a function of dropping a table
 	void API_Delete(string Table_name);
@@ -59,10 +53,10 @@ public:
 
 	//It's a funcion of creating an index of this table.
 	//You need to give a vector of atrributes, and we'll build an index on them.
-	void API_CreateIndex(string Table_name,Attribute index_Attribute);
+	void API_CreateIndex(string Table_name, string AttributeName, string indexName);
 	
 	//It's a function of dropping an index. You need to give a vector of attributes in this index.
-	void API_DropIndex(string Table_name, string index_Attribute);
+	void API_DropIndex(string index_name);
 	
 	//It's a function of show index in the whole table.
 	void Show_Index(string Table_name);	
