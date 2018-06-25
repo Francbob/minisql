@@ -135,14 +135,14 @@ struct ValueStruct
 	{
 		if (TYPE == 0)
 		{
-			char result[8];
-			sprintf(result, "%8d", INT);
+			char result[9];
+			sprintf_s(result, "%08d", INT);
 			return result;
 		}
 		else if (TYPE == 256)
 		{
-			char result[16];
-			sprintf(result, "%16.7lf", FLOAT);
+			char result[17];
+			sprintf_s(result, "%016.7lf", FLOAT);
 			return result;
 		}
 		else
@@ -183,6 +183,7 @@ struct ValueStruct
 			std::cout << CHAR_N;
 	}
 };
+
 
 class Attribute {
 private:

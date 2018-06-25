@@ -3,10 +3,63 @@
 #include <direct.h>
 #include <cassert>
 #include <list>
+#include <string>
 #include <vector>
 #include <map>
 
 //Return 1 if drop a table successfully, while return 0 if fails.
+
+string RecordManager::string PadStringToOutput(string padString)
+{
+	int valueType;
+	if (padString.size() > 8 && padString[8] == '.')
+		for (int i = 0; i < padString.size(); i++)
+		{
+			if (i != 8 && !isdigit(padString[i]))
+			{
+				valueType = padString.size();
+				break;
+			}
+			if (i == padString.size() - 1)
+				valueType = 256;
+		}
+	else
+	{
+		for (int i = 0; i < padString.size(); i++)
+		{
+			if (!isdigit(padString[i]))
+			{
+				valueType = padString.size();
+				break;
+			}
+			if (i == padString.size() - 1)
+				valueType = 0;
+		}
+	}
+	if (valueType == 0)
+	{
+		int INT;
+		stringstream ss(padString);
+		ss >> INT;
+		return to_string(INT);
+	}
+	else if (valueType == 256)
+	{
+		double FLOAT;
+		stringstream ss(padString);
+		ss >> FLOAT;
+		return to_string(FLOAT);
+	}
+	else
+	{
+		string CHAR_N;
+		stringstream ss(padString);
+		ss >> CHAR_N;
+		return CHAR_N;
+	}
+	return "FAILED TO CONVERT PADSTRING TO STRING\n";
+}
+
 int RecordManager::DropTable(string tableName)
 {
 	// 如果不存在table，这一步据说在API里做了
@@ -193,14 +246,17 @@ int RecordManager::Delete(string tableName)
 int RecordManager::Delete(string tableName, vector<RecordLocation> Index_find, map<int, vector<string>> &del_vector)
 {
 	changeTB(tableName);
+	int count = 0;
 	for (auto index : Index_find)
 	{
 		for (int i = 0; i < current_attribute_num; i++)
 		{
+			count++;
 			delete_record(index.block_index, index.offset);
 			del_vector[i].push_back(find_attr(index.block_index, index.offset, i));
 		}
 	}
+	return count;
 }
 
 //Delete without any condition
@@ -244,6 +300,7 @@ int RecordManager::Delete(string tableName, vector<condition> Condition_no_index
 		}
 		cout << endl;
 	}
+	return del_list.size();
 }
 
 //Delete with some index, condition without index is in "Condition_no_index"
@@ -287,6 +344,7 @@ int RecordManager::Delete(string tableName, vector<RecordLocation> Index_find, v
 		}
 		cout << endl;
 	}
+	return del_list.size();
 }
 
 // 以下为郑成博提供的

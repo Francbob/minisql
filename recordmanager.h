@@ -6,6 +6,7 @@
 #include "Attribute.h"
 #include "CatalogManager.h"
 #include <map>
+#include <sstream>
 #include "Condition.h"
 #include "API.h"
 #include <string>
@@ -16,6 +17,9 @@ private:
 	buffermanager bm;
 	int block_size;
 	int current_attribute_num;
+
+	std::string PadStringToOutput(std::string padString);
+
 public:
 	RecordManager() {};
 	~RecordManager() {
