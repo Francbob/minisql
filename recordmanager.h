@@ -11,6 +11,7 @@
 
 class RecordManager {
 private:
+	CatalogManager *cm;
 	buffermanager bm;
 	int block_size;
 	int current_attribute_num;
@@ -38,7 +39,7 @@ public:
 
 	bool delete_record(int block_index, int record_index);
 
-	bool CreateTable(const std::std::string &table,
+	bool CreateTable(const std::string &table,
 		vector<Attribute> vector_Attribute);
 	std::string find_attr(int block_index, int record_index, int attr_index);
 	int insert(const std::string& record);
@@ -88,7 +89,12 @@ public:
 	//For each tuple you delete, you need add its location(index of block and this record's offset) to map "Delete_record"
 	int Delete(std::string Table_name, std::vector<RecordLocation> Index_find, std::vector<condition> Condition_no_index, map<int, vector<std::string>> &del_vector);
 	
-
+	typedef struct
+	{
+		std::string value;
+		int block_index;
+		int record_index;
+	} del_info, find_info;
 };
 
 #endif //MINISQL_RECORDMANAGER_H
